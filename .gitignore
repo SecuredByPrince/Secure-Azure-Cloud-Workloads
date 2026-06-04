@@ -1,0 +1,114 @@
+# ========================= 
+# OS FILES
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# EDITOR & IDE FILES
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# AZURE & LOCAL CONFIG FILES
+# =========================
+.env
+.env.*
+*.local
+*.secret
+*.secrets
+*.pem
+*.key
+*.pfx
+*.cer
+
+# =========================
+# TERRAFORM
+# =========================
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# =========================
+# BICEP / ARM TEMP FILES
+# =========================
+*.bicepconfig
+*.parameters.json
+
+# =========================
+# LOG FILES
+# =========================
+*.log
+logs/
+*.out
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.envrc
+
+# =========================
+# NODE MODULES
+# =========================
+node_modules/
+
+# =========================
+# BUILD / TEMP FILES
+# =========================
+dist/
+build/
+tmp/
+temp/
+
+# =========================
+# AZURE CLI
+# =========================
+.azure/
+
+# =========================
+# SECURITY SENSITIVE FILES
+# =========================
+credentials.json
+service-principal.json
+tenant-details.txt
+subscription-details.txt
+access-tokens.txt
+
+# =========================
+# SCREENSHOT EXPORT TEMP FILES
+# =========================
+Screenshots/temp/
+Screenshots/drafts/
+
+# =========================
+# KQL EXPORTS & DATA DUMPS
+# =========================
+*.csv
+*.xlsx
+*.bak
+
+# =========================
+# JUPYTER NOTEBOOK CHECKPOINTS
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# MAC & WINDOWS METADATA
+# =========================
+ehthumbs.db
+Icon?
