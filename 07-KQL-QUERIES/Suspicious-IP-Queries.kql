@@ -1,0 +1,185 @@
+// ============================================================
+// Suspicious-IP-Queries.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Queries used to identify suspicious IP activity,
+// authentication anomalies, telemetry inconsistencies,
+// operational investigations, and governance visibility.
+// ============================================================
+
+
+
+// ============================================================
+// 1. Repeated Failed Sign-Ins by IP Address
+// Detect excessive failed authentication attempts
+// ============================================================
+
+SigninLogs
+| where ResultType != 0
+| summarize FailedAttempts=count()
+    by IPAddress, UserPrincipalName
+| where FailedAttempts >= 5
+| order by FailedAttempts desc
+
+
+
+// ============================================================
+// 2. Successful and Failed Authentication Activity
+// Compare successful and failed sign-ins by IP
+// ============================================================
+
+SigninLogs
+| summarize
+    SuccessfulLogins=countif(ResultType == 0),
+    FailedLogins=countif(ResultType != 0)
+    by IPAddress
+| order by FailedLogins desc
+
+
+
+// ============================================================
+// 3. Suspicious Authentication Volume
+// Detect unusually high sign-in activity from IPs
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by IPAddress
+| where SignInCount >= 20
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 4. IP Address Activity by Geographic Location
+// Review authentication activity by location
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by IPAddress, Location
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 5. Multiple User Sign-Ins from Same IP
+// Detect shared IP authentication patterns
+// ============================================================
+
+SigninLogs
+| summarize DistinctUsers=dcount(UserPrincipalName)
+    by IPAddress
+| where DistinctUsers >= 5
+| order by DistinctUsers desc
+
+
+
+// ============================================================
+// 6. Administrative Activity by IP Address
+// Review administrative operations linked to IPs
+// ============================================================
+
+AzureActivity
+| project
+    TimeGenerated,
+    Caller,
+    CallerIpAddress,
+    OperationNameValue,
+    ActivityStatusValue,
+    ResourceGroup,
+    ResourceId
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 7. VM Authentication Activity by IP Address
+// Review VM authentication events from IPs
+// ============================================================
+
+SecurityEvent
+| where EventID in (4624, 4625)
+| project
+    TimeGenerated,
+    Computer,
+    Account,
+    IpAddress,
+    EventID,
+    Activity
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 8. Repeated VM Authentication Failures
+// Detect repeated failed VM logon attempts
+// ============================================================
+
+SecurityEvent
+| where EventID == 4625
+| summarize FailedAttempts=count()
+    by Computer, Account, IpAddress
+| where FailedAttempts >= 5
+| order by FailedAttempts desc
+
+
+
+// ============================================================
+// 9. Correlated Security Alerts by IP
+// Review security alerts associated with suspicious IPs
+// ============================================================
+
+SecurityAlert
+| project
+    TimeGenerated,
+    AlertName,
+    Severity,
+    ProviderName,
+    CompromisedEntity,
+    ExtendedProperties
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 10. Authentication Activity Timeline
+// Review sign-in trends over time by IP
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by bin(TimeGenerated, 1h), IPAddress
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 11. IP Address Investigation Visibility
+// Review detailed authentication telemetry
+// ============================================================
+
+SigninLogs
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    IPAddress,
+    Location,
+    AppDisplayName,
+    ClientAppUsed,
+    ConditionalAccessStatus,
+    ResultDescription
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 12. Alert Severity Visibility
+// Analyze alerts by severity level
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count()
+    by Severity
+| order by AlertCount desc

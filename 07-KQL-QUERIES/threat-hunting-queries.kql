@@ -1,0 +1,144 @@
+// ============================================================
+// Threat-Hunting-Queries.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Threat hunting queries used to improve operational visibility,
+// telemetry correlation, incident investigations,
+// workload monitoring, and governance awareness.
+// ============================================================
+
+
+
+// ============================================================
+// 1. Failed Authentication Attempts
+// Detect repeated failed sign-ins
+// ============================================================
+
+SigninLogs
+| where ResultType != 0
+| summarize FailedAttempts=count() by UserPrincipalName, IPAddress
+| where FailedAttempts >= 5
+| order by FailedAttempts desc
+
+
+
+// ============================================================
+// 2. Suspicious IP Address Activity
+// Detect sign-ins from suspicious IP addresses
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count() by IPAddress, UserPrincipalName
+| where SignInCount >= 10
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 3. Security Alert Visibility
+// Retrieve Sentinel and Defender alerts
+// ============================================================
+
+SecurityAlert
+| project
+    TimeGenerated,
+    AlertName,
+    Severity,
+    ProviderName,
+    CompromisedEntity,
+    Tactics
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 4. Administrative Activity Monitoring
+// Review Azure administrative operations
+// ============================================================
+
+AzureActivity
+| summarize ActivityCount=count()
+    by Caller, OperationNameValue
+| order by ActivityCount desc
+
+
+
+// ============================================================
+// 5. Workload Heartbeat Visibility
+// Detect disconnected or inactive workloads
+// ============================================================
+
+Heartbeat
+| summarize LastHeartbeat=max(TimeGenerated)
+    by Computer
+| order by LastHeartbeat asc
+
+
+
+// ============================================================
+// 6. VM Security Event Visibility
+// Retrieve security-related VM events
+// ============================================================
+
+SecurityEvent
+| project
+    TimeGenerated,
+    Computer,
+    EventID,
+    Activity,
+    Account,
+    RenderedDescription
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 7. Alert Severity Analysis
+// Analyze alert distribution by severity
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count() by Severity
+| order by AlertCount desc
+
+
+
+// ============================================================
+// 8. Investigation Correlation Visibility
+// Correlate incidents with alerts
+// ============================================================
+
+SecurityIncident
+| project
+    TimeGenerated,
+    IncidentNumber,
+    Title,
+    Severity,
+    Status,
+    Owner
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 9. Authentication Location Visibility
+// Review authentication activity by location
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by Location, UserPrincipalName
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 10. Governance Recommendation Visibility
+// Review Defender for Cloud recommendations
+// ============================================================
+
+SecurityRecommendation
+| summarize RecommendationCount=count()
+    by RecommendationName
+| order by RecommendationCount desc

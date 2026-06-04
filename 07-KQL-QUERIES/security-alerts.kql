@@ -1,0 +1,22 @@
+// ============================================================
+// Security-Alerts.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Retrieves Microsoft Sentinel and Defender security alerts
+// to improve operational visibility, telemetry correlation,
+// incident investigations, and governance awareness.
+// ============================================================
+
+SecurityAlert
+| project
+    TimeGenerated,
+    AlertName,
+    Severity,
+    ProviderName,
+    CompromisedEntity,
+    SystemAlertId,
+    Tactics,
+    Techniques,
+    Description
+| order by TimeGenerated desc

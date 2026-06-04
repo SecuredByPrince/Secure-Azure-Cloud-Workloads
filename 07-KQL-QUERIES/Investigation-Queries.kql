@@ -1,0 +1,185 @@
+// ============================================================
+// Investigation-Queries.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Investigation queries used to improve operational visibility,
+// telemetry correlation, incident investigations,
+// governance awareness, and workload monitoring.
+// ============================================================
+
+
+
+// ============================================================
+// 1. Security Incident Investigations
+// Retrieve Sentinel incidents
+// ============================================================
+
+SecurityIncident
+| project
+    TimeGenerated,
+    IncidentNumber,
+    Title,
+    Severity,
+    Status,
+    Owner,
+    ProviderName,
+    Classification
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 2. Security Alert Investigations
+// Retrieve Defender and Sentinel alerts
+// ============================================================
+
+SecurityAlert
+| project
+    TimeGenerated,
+    AlertName,
+    Severity,
+    ProviderName,
+    CompromisedEntity,
+    Tactics,
+    Description
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 3. Failed Authentication Investigations
+// Review failed sign-in activity
+// ============================================================
+
+SigninLogs
+| where ResultType != 0
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    IPAddress,
+    Location,
+    AppDisplayName,
+    ResultDescription
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 4. Administrative Activity Investigations
+// Review Azure administrative operations
+// ============================================================
+
+AzureActivity
+| project
+    TimeGenerated,
+    Caller,
+    OperationNameValue,
+    ActivityStatusValue,
+    ResourceGroup,
+    ResourceProviderValue,
+    ResourceId,
+    CorrelationId
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 5. Workload Monitoring Investigations
+// Review VM heartbeat visibility
+// ============================================================
+
+Heartbeat
+| summarize LastHeartbeat=max(TimeGenerated)
+    by Computer
+| order by LastHeartbeat asc
+
+
+
+// ============================================================
+// 6. VM Security Event Investigations
+// Retrieve VM security-related events
+// ============================================================
+
+SecurityEvent
+| project
+    TimeGenerated,
+    Computer,
+    EventID,
+    Activity,
+    Account,
+    RenderedDescription
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 7. Authentication Location Investigations
+// Review sign-in activity by location
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by Location, UserPrincipalName
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 8. Suspicious IP Investigations
+// Review repeated activity from IP addresses
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by IPAddress, UserPrincipalName
+| where SignInCount >= 5
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 9. Alert Severity Investigations
+// Analyze alerts by severity level
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count()
+    by Severity
+| order by AlertCount desc
+
+
+
+// ============================================================
+// 10. Governance Recommendation Investigations
+// Review Defender for Cloud recommendations
+// ============================================================
+
+SecurityRecommendation
+| summarize RecommendationCount=count()
+    by RecommendationName
+| order by RecommendationCount desc
+
+
+
+// ============================================================
+// 11. Correlation ID Investigations
+// Review correlated Azure activities
+// ============================================================
+
+AzureActivity
+| summarize ActivityCount=count()
+    by CorrelationId, Caller
+| order by ActivityCount desc
+
+
+
+// ============================================================
+// 12. Incident Status Visibility
+// Review incident workflow status
+// ============================================================
+
+SecurityIncident
+| summarize IncidentCount=count()
+    by Status, Severity
+| order by IncidentCount desc

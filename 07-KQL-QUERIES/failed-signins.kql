@@ -1,0 +1,22 @@
+// ============================================================
+// Failed-Signins.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Detects failed authentication attempts within Azure AD / Entra ID
+// to improve operational visibility, authentication monitoring,
+// incident investigations, and governance awareness.
+// ============================================================
+
+SigninLogs
+| where ResultType != 0
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    IPAddress,
+    Location,
+    AppDisplayName,
+    ClientAppUsed,
+    ResultDescription,
+    ConditionalAccessStatus
+| order by TimeGenerated desc

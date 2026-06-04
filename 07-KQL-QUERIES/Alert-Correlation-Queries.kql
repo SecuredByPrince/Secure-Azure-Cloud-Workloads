@@ -1,0 +1,261 @@
+// ============================================================
+// Alert-Correlation-Queries.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Queries used to correlate security alerts, incidents,
+// authentication telemetry, workload activity,
+// and governance visibility to improve operational
+// investigations and enterprise cloud resilience.
+// ============================================================
+
+
+
+// ============================================================
+// 1. Security Alerts by Severity
+// Review alert distribution by severity
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count()
+    by Severity
+| order by AlertCount desc
+
+
+
+// ============================================================
+// 2. Security Alerts by Provider
+// Correlate alerts from different providers
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count()
+    by ProviderName
+| order by AlertCount desc
+
+
+
+// ============================================================
+// 3. Correlated Incidents and Alerts
+// Review Sentinel incidents alongside alerts
+// ============================================================
+
+SecurityIncident
+| project
+    TimeGenerated,
+    IncidentNumber,
+    Title,
+    Severity,
+    Status,
+    Owner,
+    ProviderName
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 4. Authentication Failures with Alerts
+// Correlate failed sign-ins with security visibility
+// ============================================================
+
+SigninLogs
+| where ResultType != 0
+| summarize FailedAttempts=count()
+    by UserPrincipalName, IPAddress
+| where FailedAttempts >= 5
+| order by FailedAttempts desc
+
+
+
+// ============================================================
+// 5. Administrative Operations Correlation
+// Review administrative activity alongside investigations
+// ============================================================
+
+AzureActivity
+| project
+    TimeGenerated,
+    Caller,
+    OperationNameValue,
+    ActivityStatusValue,
+    ResourceGroup,
+    ResourceId,
+    CorrelationId
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 6. VM Security Event Correlation
+// Correlate VM authentication and security events
+// ============================================================
+
+SecurityEvent
+| where EventID in (4624, 4625, 4672)
+| project
+    TimeGenerated,
+    Computer,
+    Account,
+    EventID,
+    Activity,
+    IpAddress
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 7. Suspicious IP Correlation
+// Detect repeated activity from suspicious IPs
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by IPAddress, UserPrincipalName
+| where SignInCount >= 10
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 8. Workload Heartbeat Correlation
+// Review disconnected or inactive workloads
+// ============================================================
+
+Heartbeat
+| summarize LastHeartbeat=max(TimeGenerated)
+    by Computer
+| order by LastHeartbeat asc
+
+
+
+// ============================================================
+// 9. Alert Timeline Correlation
+// Analyze alert trends over time
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count()
+    by bin(TimeGenerated, 1h), Severity
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 10. Authentication Location Correlation
+// Review authentication activity by geographic location
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by Location, UserPrincipalName
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 11. Governance Recommendation Correlation
+// Review Defender for Cloud recommendations
+// ============================================================
+
+SecurityRecommendation
+| summarize RecommendationCount=count()
+    by RecommendationName
+| order by RecommendationCount desc
+
+
+
+// ============================================================
+// 12. Correlation ID Visibility
+// Review Azure operations grouped by Correlation ID
+// ============================================================
+
+AzureActivity
+| summarize ActivityCount=count()
+    by CorrelationId, Caller
+| order by ActivityCount desc
+
+
+
+// ============================================================
+// 13. Incident Status Correlation
+// Review incident workflow status visibility
+// ============================================================
+
+SecurityIncident
+| summarize IncidentCount=count()
+    by Status, Severity
+| order by IncidentCount desc
+
+
+
+// ============================================================
+// 14. Alert Tactics Correlation
+// Analyze alerts by MITRE ATT&CK tactics
+// ============================================================
+
+SecurityAlert
+| summarize AlertCount=count()
+    by Tactics
+| order by AlertCount desc
+
+
+
+// ============================================================
+// 15. Authentication Application Correlation
+// Review authentication activity by application
+// ============================================================
+
+SigninLogs
+| summarize SignInCount=count()
+    by AppDisplayName, UserPrincipalName
+| order by SignInCount desc
+
+
+
+// ============================================================
+// 16. Security Event Correlation by Event ID
+// Analyze VM security events by Event ID
+// ============================================================
+
+SecurityEvent
+| summarize EventCount=count()
+    by EventID
+| order by EventCount desc
+
+
+
+// ============================================================
+// 17. Security Alert Entity Correlation
+// Review compromised entities associated with alerts
+// ============================================================
+
+SecurityAlert
+| project
+    TimeGenerated,
+    AlertName,
+    Severity,
+    CompromisedEntity,
+    ProviderName
+| order by TimeGenerated desc
+
+
+
+// ============================================================
+// 18. Multi-Source Telemetry Correlation
+// Correlate incidents, alerts, and activity visibility
+// ============================================================
+
+union isfuzzy=true
+(
+    SecurityAlert
+    | project TimeGenerated, Source="SecurityAlert", Details=AlertName
+),
+(
+    SecurityIncident
+    | project TimeGenerated, Source="SecurityIncident", Details=Title
+),
+(
+    AzureActivity
+    | project TimeGenerated, Source="AzureActivity", Details=OperationNameValue
+)
+| order by TimeGenerated desc

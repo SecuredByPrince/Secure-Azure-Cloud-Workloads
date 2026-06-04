@@ -1,0 +1,23 @@
+// ============================================================
+// Azure-Activity.kql
+// Secure Azure Cloud Workloads
+// ============================================================
+// Description:
+// Retrieves Azure Activity Log operations to improve
+// operational visibility, governance monitoring,
+// administrative accountability, and incident investigations.
+// ============================================================
+
+AzureActivity
+| project
+    TimeGenerated,
+    Caller,
+    OperationNameValue,
+    ActivityStatusValue,
+    ResourceGroup,
+    ResourceProviderValue,
+    ResourceId,
+    SubscriptionId,
+    CategoryValue,
+    CorrelationId
+| order by TimeGenerated desc
